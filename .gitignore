@@ -30,3 +30,6 @@ pg_data/
 
 # Others
 *.log
+
+# Local-only notes
+LOCAL_TESTING.md

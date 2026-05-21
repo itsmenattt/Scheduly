@@ -1,0 +1,32 @@
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.mypy_cache/
+.pytest_cache/
+build/
+dist/
+*.egg-info/
+
+# Environment files
+.env
+
+# Docker
+pg_data/
+**/pg_data/
+
+# IDEs
+.vscode/
+
+# Editor swap files
+*.swp
+*.swo
+
+# Coverage
+.coverage
+
+# Others
+*.log

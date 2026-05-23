@@ -1,0 +1,233 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  backdrop-filter: blur(2px);
+  animation: fade-in 0.2s ease;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  width: 100%;
+  max-width: 640px;
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: modal-up 0.25s ease;
+}
+
+@keyframes modal-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg-surface);
+}
+
+.modal-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--yellow);
+  background: var(--yellow-tag-bg);
+  padding: 3px 8px;
+  border: 1px solid var(--yellow-border);
+  flex-shrink: 0;
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  color: var(--text-primary);
+  font-weight: 600;
+  flex: 1;
+}
+
+.modal-close {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 12px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.modal-close:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.modal-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.modal-section { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.modal-section-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--yellow);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.modal-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.modal-step {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  margin-top: -1px;
+}
+
+.modal-step-num {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--yellow);
+  line-height: 1;
+  flex-shrink: 0;
+  width: 28px;
+}
+
+.modal-step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.modal-step-title {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+  letter-spacing: 0.06em;
+}
+
+.modal-step-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.modal-step-arrow {
+  font-size: 16px;
+  color: var(--border);
+  padding-left: 18px;
+}
+
+.modal-cost-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal-cost-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+}
+
+.modal-cost-item.hard { background: rgba(201,64,64,0.06); }
+.modal-cost-item.soft { background: var(--yellow-bg); }
+
+.modal-cost-type {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  padding: 2px 6px;
+  flex-shrink: 0;
+}
+
+.modal-cost-item.hard .modal-cost-type {
+  color: var(--red);
+  background: rgba(201,64,64,0.12);
+}
+
+.modal-cost-item.soft .modal-cost-type {
+  color: var(--yellow);
+  background: var(--yellow-tag-bg);
+}
+
+.modal-cost-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.modal-cost-val {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.modal-stack-row {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.modal-stack-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  border-right: 1px solid var(--border);
+}
+
+.modal-stack-item:last-child { border-right: none; }
+
+.modal-stack-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+}
+
+.modal-stack-val {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-primary);
+}

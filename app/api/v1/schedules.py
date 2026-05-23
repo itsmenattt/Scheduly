@@ -150,10 +150,10 @@ async def quick_execute(payload: SimpleExecuteRequest):
         availabilities=availabilities,
         shift_configs=shift_configs,
         params={
-            "initial_temperature": 1000.0,
-            "cooling_rate": 0.95,
-            "min_temperature": 0.1,
-            "max_iterations": 5000,
+            "initial_temperature": 3000.0,    
+            "cooling_rate": 0.95,             
+            "min_temperature": 0.1,         
+            "max_iterations": 15000,         
         },
     )
 

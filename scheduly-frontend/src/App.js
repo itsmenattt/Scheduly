@@ -6,6 +6,7 @@ import ResultTable from './components/ResultTable';
 import StatusBar from './components/StatusBar';
 import SplashScreen from './components/SplashScreen';
 import AboutModal from './components/AboutModal';
+import SAChart from './components/SAChart';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
 
@@ -159,6 +160,7 @@ export default function App() {
           {result && (
             <>
               {meta && <StatusBar meta={meta} employeeCount={employees.filter(Boolean).length} shiftHours={shiftHours} />}
+              {meta && <SAChart meta={meta} />}
               <ResultTable data={result} />
             </>
           )}

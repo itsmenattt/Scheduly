@@ -24,6 +24,7 @@
   max-height: 85vh;
   overflow-y: auto;
   animation: modal-up 0.25s ease;
+   border-radius: 4px;
 }
 
 @keyframes modal-up {
@@ -75,6 +76,7 @@
   justify-content: center;
   transition: all 0.15s;
   flex-shrink: 0;
+  border-radius: 3px;
 }
 
 .modal-close:hover {

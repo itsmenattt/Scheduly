@@ -12,15 +12,17 @@ export default function AutoGeneratePanel({
   employeeCount,
   onEmployeeCount,
   shiftHours,
+  shiftCountPerDay,
   workingDays,
   startDate,
   onShiftHours,
+  onShiftCountPerDay,
   onWorkingDays,
   onStartDate,
   onGenerate,
   loading,
 }) {
-  const shiftsPerDay = 24 / shiftHours;
+  const shiftsPerDay = shiftCountPerDay || (shiftHours ? 24 / shiftHours : 0);
 
   return (
     <div className="config-grid">
@@ -56,6 +58,24 @@ export default function AutoGeneratePanel({
         </div>
         <span className="config-derived" style={{ marginTop: 6, display: 'inline-block' }}>
           {shiftsPerDay}× shift / hari
+        </span>
+      </div>
+
+      <div className="config-row">
+        <label className="config-label">JUMLAH SHIFT / HARI</label>
+        <div className="config-control">
+          <select
+            className="config-select"
+            value={shiftCountPerDay || ''}
+            onChange={e => onShiftCountPerDay(Number(e.target.value))}
+          >
+            {[1, 2, 3, 4, 6].map(count => (
+              <option key={count} value={count}>{count} shift/hari</option>
+            ))}
+          </select>
+        </div>
+        <span className="config-derived" style={{ marginTop: 6, display: 'inline-block' }}>
+          {shiftCountPerDay ? `${24 / shiftCountPerDay} jam / shift` : ''}
         </span>
       </div>
 

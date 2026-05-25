@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 from types import SimpleNamespace
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -86,11 +86,18 @@ class SimpleExecuteRequest(BaseModel):
         min_length=1,
         description="Daftar nama karyawan; jumlah nama sama dengan total karyawan",
     )
-    shift_hours: int = Field(
-        ...,
+    # Either provide shift_hours or shift_count_per_day (or both, but they must be consistent)
+    shift_hours: Optional[int] = Field(
+        None,
         gt=0,
         le=24,
-        description="Jam kerja per-shift, misalnya 8 berarti 3 shift per hari",
+        description="Jam kerja per-shift; misalnya 8 berarti 3 shift per hari jika konsisten",
+    )
+    shift_count_per_day: Optional[int] = Field(
+        None,
+        gt=0,
+        le=24,
+        description="Jumlah shift per hari (mis. 3 untuk 3 shift/hari)",
     )
     working_days_per_week: int = Field(
         ...,
@@ -111,12 +118,31 @@ async def quick_execute(payload: SimpleExecuteRequest):
     if len(names) != len(set(names)):
         raise HTTPException(status_code=400, detail="employee_names harus unik")
 
-    if 24 % payload.shift_hours != 0:
-        raise HTTPException(status_code=400, detail="shift_hours harus membagi 24 secara habis")
+    # Determine shift_hours and shift_count_per_day from provided payload
+    provided_hours = payload.shift_hours
+    provided_count = payload.shift_count_per_day
 
-    shift_count_per_day = 24 // payload.shift_hours
-    if shift_count_per_day < 1:
-        raise HTTPException(status_code=400, detail="shift_hours tidak valid")
+    if provided_hours is None and provided_count is None:
+        raise HTTPException(status_code=400, detail="Harus menyediakan shift_hours atau shift_count_per_day")
+
+    if provided_hours is not None and provided_count is not None:
+        # both provided -> must be consistent
+        if 24 % provided_hours != 0 or (24 // provided_hours) != provided_count:
+            raise HTTPException(status_code=400, detail="shift_hours dan shift_count_per_day tidak konsisten")
+        shift_hours = provided_hours
+        shift_count_per_day = provided_count
+    elif provided_count is not None:
+        # compute hours
+        if 24 % provided_count != 0:
+            raise HTTPException(status_code=400, detail="shift_count_per_day harus membagi 24 secara habis")
+        shift_count_per_day = provided_count
+        shift_hours = 24 // shift_count_per_day
+    else:
+        # only hours given
+        if 24 % provided_hours != 0:
+            raise HTTPException(status_code=400, detail="shift_hours harus membagi 24 secara habis")
+        shift_hours = provided_hours
+        shift_count_per_day = 24 // shift_hours
 
     employees = [
         SimpleNamespace(id=index + 1, name=name, max_shifts_per_week=payload.working_days_per_week)
@@ -125,8 +151,8 @@ async def quick_execute(payload: SimpleExecuteRequest):
 
     shift_labels = []
     for index in range(shift_count_per_day):
-        start_hour = index * payload.shift_hours
-        end_hour = (index + 1) * payload.shift_hours
+        start_hour = index * shift_hours
+        end_hour = (index + 1) * shift_hours
         shift_labels.append(
             {
                 "label": f"SHIFT {index + 1}",
@@ -185,17 +211,40 @@ async def quick_execute(payload: SimpleExecuteRequest):
                 }
             )
 
+    # Prefer nanosecond precision when available and expose multiple formats for UI
+    runtime_seconds = float(result.get("runtime_seconds", result.get("runtime", 0.0)))
+    runtime_nanoseconds = int(result.get("runtime_nanoseconds", int(runtime_seconds * 1e9)))
+    runtime_milliseconds = int(runtime_nanoseconds / 1_000_000)
+
+    def _format_runtime(ns: int) -> str:
+        # human-friendly formatting choosing best unit
+        if ns < 1_000:
+            return f"{ns} ns"
+        if ns < 1_000_000:
+            us = ns / 1_000
+            return f"{us:.3f} μs"
+        if ns < 1_000_000_000:
+            ms = ns / 1_000_000
+            return f"{ms:.3f} ms"
+        s = ns / 1_000_000_000
+        return f"{s:.6f} s"
+
+    runtime_human = _format_runtime(runtime_nanoseconds)
+
     return {
         "input": {
             "employee_names": names,
-            "shift_hours": payload.shift_hours,
+            "shift_hours": shift_hours,
             "working_days_per_week": payload.working_days_per_week,
             "shift_count_per_day": shift_count_per_day,
         },
         "schedule": {
             "status": "COMPLETED",
             "total_cost": result["cost"],
-            "runtime_seconds": result["runtime"],
+            "runtime_seconds": runtime_seconds,
+            "runtime_milliseconds": runtime_milliseconds,
+            "runtime_nanoseconds": runtime_nanoseconds,
+            "runtime_human": runtime_human,
             "iterations_run": result["iterations"],
         },
         "table": table_rows,

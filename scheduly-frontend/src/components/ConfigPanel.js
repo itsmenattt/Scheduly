@@ -17,17 +17,6 @@ export default function ConfigPanel({ shiftHours, workingDays, startDate, onShif
 
   const handleShiftHoursChange = (value) => {
     if (value === CUSTOM_VALUE) {
-      const current = Number.isFinite(shiftHours) ? shiftHours : 8;
-      const input = window.prompt('Masukkan jam kerja per shift (harus membagi 24):', String(current));
-      if (input === null) return;
-
-      const customHours = Number(input);
-      if (!Number.isInteger(customHours) || customHours < 1 || customHours > 24 || 24 % customHours !== 0) {
-        window.alert('Jam kerja harus bilangan bulat 1-24 dan membagi 24 secara habis.');
-        return;
-      }
-
-      onShiftHours(customHours);
       return;
     }
 

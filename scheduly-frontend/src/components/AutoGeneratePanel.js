@@ -14,9 +14,13 @@ export default function AutoGeneratePanel({
   employeeCount,
   onEmployeeCount,
   shiftHours,
+  shiftHoursMode,
+  customShiftHours,
   workingDays,
   startDate,
   onShiftHours,
+  onShiftHoursMode,
+  onCustomShiftHours,
   onWorkingDays,
   onStartDate,
   onGenerate,
@@ -24,25 +28,16 @@ export default function AutoGeneratePanel({
 }) {
   const presetShiftValues = SHIFT_OPTIONS.map(o => o.value);
   const isPresetShift = presetShiftValues.includes(shiftHours);
-  const selectedShiftValue = isPresetShift ? shiftHours : CUSTOM_VALUE;
+  const selectedShiftValue = shiftHoursMode === 'custom' ? CUSTOM_VALUE : (isPresetShift ? shiftHours : CUSTOM_VALUE);
   const shiftsPerDay = shiftHours ? 24 / shiftHours : 0;
 
   const handleShiftHoursChange = (value) => {
     if (value === CUSTOM_VALUE) {
-      const current = Number.isFinite(shiftHours) ? shiftHours : 8;
-      const input = window.prompt('Masukkan jam kerja per shift (harus membagi 24):', String(current));
-      if (input === null) return;
-
-      const customHours = Number(input);
-      if (!Number.isInteger(customHours) || customHours < 1 || customHours > 24 || 24 % customHours !== 0) {
-        window.alert('Jam kerja harus bilangan bulat 1-24 dan membagi 24 secara habis.');
-        return;
-      }
-
-      onShiftHours(customHours);
+      onShiftHoursMode('custom');
       return;
     }
 
+    onShiftHoursMode('preset');
     onShiftHours(Number(value));
   };
 
@@ -83,6 +78,27 @@ export default function AutoGeneratePanel({
           {shiftsPerDay}× shift / hari
         </span>
       </div>
+
+      {shiftHoursMode === 'custom' && (
+        <div className="config-row">
+          <label className="config-label">JAM CUSTOM</label>
+          <div className="config-control">
+            <input
+              className="config-input-date"
+              type="number"
+              min="1"
+              max="24"
+              step="1"
+              value={customShiftHours}
+              onChange={e => onCustomShiftHours(e.target.value)}
+              placeholder="Masukkan jam kerja"
+            />
+          </div>
+          <span className="config-derived" style={{ marginTop: 6, display: 'inline-block' }}>
+            Harus membagi 24 habis
+          </span>
+        </div>
+      )}
 
       <div className="config-row">
         <label className="config-label">HARI KERJA / MINGGU</label>

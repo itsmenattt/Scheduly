@@ -19,6 +19,8 @@ const API_BASE = process.env.REACT_APP_API_URL || DEFAULT_API_BASE;
 export default function App() {
   const [employees, setEmployees] = useState(['', '', '', '', '']);
   const [shiftHours, setShiftHours] = useState(8);
+  const [shiftHoursMode, setShiftHoursMode] = useState('preset');
+  const [customShiftHours, setCustomShiftHours] = useState('');
   const [workingDays, setWorkingDays] = useState(5);
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [autoEmployeeCount, setAutoEmployeeCount] = useState(5);
@@ -57,6 +59,15 @@ export default function App() {
 
   const handleAutoGenerate = useCallback(async () => {
     const count = Math.max(1, Math.min(1000, Number(autoEmployeeCount) || 1));
+    const resolvedShiftHours = shiftHoursMode === 'custom'
+      ? Number(customShiftHours)
+      : Number(shiftHours);
+
+    if (!Number.isInteger(resolvedShiftHours) || resolvedShiftHours < 1 || resolvedShiftHours > 24 || 24 % resolvedShiftHours !== 0) {
+      setError('Jam kerja custom harus bilangan bulat 1-24 dan membagi 24 secara habis.');
+      return;
+    }
+
     const generatedNames = makeRandomNames(count);
 
     setAutoMode(true);
@@ -75,18 +86,18 @@ export default function App() {
 
       const today = new Date().toISOString().split('T')[0];
       setEmployees(generatedNames);
-      setShiftHours(Number(shiftHours));
+      setShiftHours(Number(resolvedShiftHours));
       setWorkingDays(Number(workingDays));
       setStartDate(today);
 
-      const computedShiftCount = 24 / Number(shiftHours);
+      const computedShiftCount = 24 / Number(resolvedShiftHours);
 
       const executeRes = await fetch(`${API_BASE}/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           employee_names: generatedNames,
-          shift_hours: Number(shiftHours),
+          shift_hours: Number(resolvedShiftHours),
           shift_count_per_day: computedShiftCount,
           working_days_per_week: Number(workingDays),
           start_date: today,
@@ -107,7 +118,7 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  }, [API_BASE, autoEmployeeCount, makeRandomNames, shiftHours, workingDays]);
+  }, [API_BASE, autoEmployeeCount, customShiftHours, makeRandomNames, shiftHours, shiftHoursMode, workingDays]);
 
   const handleGenerate = useCallback(async () => {
     const names = employees.map(e => e.trim()).filter(Boolean);
@@ -180,9 +191,13 @@ export default function App() {
               <div className="section-label" style={{ marginTop: '2.5rem' }}>02 — KONFIGURASI</div>
               <ConfigPanel
                 shiftHours={shiftHours}
+                shiftHoursMode={shiftHoursMode}
+                customShiftHours={customShiftHours}
                 workingDays={workingDays}
                 startDate={startDate}
                 onShiftHours={setShiftHours}
+                onShiftHoursMode={setShiftHoursMode}
+                onCustomShiftHours={setCustomShiftHours}
                 onWorkingDays={setWorkingDays}
                 onStartDate={setStartDate}
               />
@@ -214,9 +229,13 @@ export default function App() {
                 employeeCount={autoEmployeeCount}
                 onEmployeeCount={setAutoEmployeeCount}
                 shiftHours={shiftHours}
+                shiftHoursMode={shiftHoursMode}
+                customShiftHours={customShiftHours}
                 workingDays={workingDays}
                 startDate={startDate}
                 onShiftHours={setShiftHours}
+                onShiftHoursMode={setShiftHoursMode}
+                onCustomShiftHours={setCustomShiftHours}
                 onWorkingDays={setWorkingDays}
                 onStartDate={setStartDate}
                 onGenerate={handleAutoGenerate}

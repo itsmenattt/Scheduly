@@ -19,7 +19,6 @@ const API_BASE = process.env.REACT_APP_API_URL || DEFAULT_API_BASE;
 export default function App() {
   const [employees, setEmployees] = useState(['', '', '', '', '']);
   const [shiftHours, setShiftHours] = useState(8);
-  const [shiftCountPerDay, setShiftCountPerDay] = useState(3);
   const [workingDays, setWorkingDays] = useState(5);
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [autoEmployeeCount, setAutoEmployeeCount] = useState(5);
@@ -77,9 +76,10 @@ export default function App() {
       const today = new Date().toISOString().split('T')[0];
       setEmployees(generatedNames);
       setShiftHours(Number(shiftHours));
-      setShiftCountPerDay(Number(shiftCountPerDay));
       setWorkingDays(Number(workingDays));
       setStartDate(today);
+
+      const computedShiftCount = 24 / Number(shiftHours);
 
       const executeRes = await fetch(`${API_BASE}/execute`, {
         method: 'POST',
@@ -87,7 +87,7 @@ export default function App() {
         body: JSON.stringify({
           employee_names: generatedNames,
           shift_hours: Number(shiftHours),
-          shift_count_per_day: Number(shiftCountPerDay),
+          shift_count_per_day: computedShiftCount,
           working_days_per_week: Number(workingDays),
           start_date: today,
         }),
@@ -107,7 +107,7 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  }, [API_BASE, autoEmployeeCount, makeRandomNames, shiftHours, shiftCountPerDay, workingDays]);
+  }, [API_BASE, autoEmployeeCount, makeRandomNames, shiftHours, workingDays]);
 
   const handleGenerate = useCallback(async () => {
     const names = employees.map(e => e.trim()).filter(Boolean);
@@ -183,7 +183,6 @@ export default function App() {
                 workingDays={workingDays}
                 startDate={startDate}
                 onShiftHours={setShiftHours}
-                onShiftCountPerDay={setShiftCountPerDay}
                 onWorkingDays={setWorkingDays}
                 onStartDate={setStartDate}
               />
@@ -215,11 +214,9 @@ export default function App() {
                 employeeCount={autoEmployeeCount}
                 onEmployeeCount={setAutoEmployeeCount}
                 shiftHours={shiftHours}
-                shiftCountPerDay={shiftCountPerDay}
                 workingDays={workingDays}
                 startDate={startDate}
                 onShiftHours={setShiftHours}
-                onShiftCountPerDay={setShiftCountPerDay}
                 onWorkingDays={setWorkingDays}
                 onStartDate={setStartDate}
                 onGenerate={handleAutoGenerate}

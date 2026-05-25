@@ -171,8 +171,9 @@ class SimulatedAnnealingScheduler:
         return new_state
 
     def optimize(self):
-        """Main Loop Simulated Annealing."""
-        start_time = time.time()
+        """Main Loop Simulated Annealing with high-precision timing."""
+        # Use nanosecond-precision timer for best possible resolution
+        start_time_ns = time.perf_counter_ns()
         current_state = self._generate_initial_state()
         current_cost = self._calculate_cost(current_state)
         
@@ -205,9 +206,14 @@ class SimulatedAnnealingScheduler:
             if best_cost == 0:  # Kalau udah nemu jadwal sempurna, stop.
                 break
                 
+        end_time_ns = time.perf_counter_ns()
+        runtime_ns = end_time_ns - start_time_ns
+        runtime_seconds = runtime_ns / 1e9
+        # keep nanoseconds as int and seconds as float (full precision)
         return {
             "schedule": best_state,
             "cost": best_cost,
-            "runtime": time.time() - start_time,
-            "iterations": iterations
+            "runtime_seconds": runtime_seconds,
+            "runtime_nanoseconds": runtime_ns,
+            "iterations": iterations,
         }

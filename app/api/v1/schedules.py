@@ -4,11 +4,12 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import get_db
 from app.models.employee import Availability, Employee
+from app.models.schedule import Schedule, ShiftAssignment
 from app.models.shift import ShiftConfig
 from app.services.sa_optimizer import SimulatedAnnealingScheduler
 from app.services.schedule_service import ScheduleService
@@ -20,6 +21,14 @@ router = APIRouter()
 async def seed_dummy_data(db: AsyncSession = Depends(get_db)):
     """Isi database dengan data dummy untuk testing."""
     base_date = date.today()
+
+    # Reset data lama agar endpoint seed bisa dijalankan berulang kali
+    await db.execute(delete(ShiftAssignment))
+    await db.execute(delete(Schedule))
+    await db.execute(delete(Availability))
+    await db.execute(delete(ShiftConfig))
+    await db.execute(delete(Employee))
+    await db.commit()
 
     for i in range(1, 6):
         db.add(Employee(name=f"Pegawai {i}", max_shifts_per_week=5))

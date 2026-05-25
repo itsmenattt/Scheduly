@@ -5,6 +5,22 @@ export default function StatusBar({ meta, employeeCount, shiftHours }) {
   const costLabel = meta.total_cost === 0 ? 'OPTIMAL' : meta.total_cost < 500 ? 'SUBOPTIMAL' : 'KONFLIK';
   const shiftsPerDay = 24 / shiftHours;
 
+  const formatRuntime = (meta) => {
+    const ns = meta.runtime_nanoseconds;
+    const ms = meta.runtime_milliseconds;
+    const s = meta.runtime_seconds;
+
+    if (typeof ns === 'number') {
+      if (ns < 1_000) return `${ns} ns`;
+      if (ns < 1_000_000) return `${(ns / 1_000).toFixed(3)} μs`;
+      if (ns < 1_000_000_000) return `${(ns / 1_000_000).toFixed(3)} ms`;
+      return `${(ns / 1_000_000_000).toFixed(6)} s`;
+    }
+    if (typeof ms === 'number' && ms > 0) return `${ms} ms`;
+    if (typeof s === 'number') return `${s.toFixed(6)} s`;
+    return '—';
+  };
+
   return (
     <div className="status-bar">
       <div className="stat-item">
@@ -21,7 +37,7 @@ export default function StatusBar({ meta, employeeCount, shiftHours }) {
       </div>
       <div className="stat-item">
         <div className="stat-label">RUNTIME</div>
-        <div className="stat-value">{meta.runtime_seconds ? `${meta.runtime_seconds.toFixed(2)}s` : '—'}</div>
+        <div className="stat-value">{formatRuntime(meta)}</div>
       </div>
       <div className="stat-item">
         <div className="stat-label">KARYAWAN</div>

@@ -6,7 +6,25 @@ import React, { useMemo } from 'react';
  * berdasarkan data meta dari backend (iterations_run, total_cost, runtime_seconds)
  */
 export default function SAChart({ meta }) {
-  const { iterations_run = 1000, total_cost = 0, runtime_seconds = 1 } = meta;
+  const { iterations_run = 1000, total_cost = 0 } = meta;
+  const runtime_seconds = meta.runtime_seconds;
+  const runtime_milliseconds = meta.runtime_milliseconds;
+  const runtime_nanoseconds = meta.runtime_nanoseconds;
+
+  const formatRuntime = () => {
+    const ns = runtime_nanoseconds;
+    const ms = runtime_milliseconds;
+    const s = runtime_seconds;
+    if (typeof ns === 'number') {
+      if (ns < 1_000) return `${ns} ns`;
+      if (ns < 1_000_000) return `${(ns / 1_000).toFixed(3)} μs`;
+      if (ns < 1_000_000_000) return `${(ns / 1_000_000).toFixed(3)} ms`;
+      return `${(ns / 1_000_000_000).toFixed(6)} s`;
+    }
+    if (typeof ms === 'number' && ms > 0) return `${ms} ms`;
+    if (typeof s === 'number') return `${s.toFixed(6)} s`;
+    return '—';
+  };
 
   // Generate data titik-titik simulasi (50 titik)
   const points = useMemo(() => {
@@ -238,7 +256,7 @@ export default function SAChart({ meta }) {
         <MiniStat label="T_START" value="1000" />
         <MiniStat label="COOLING α" value="0.95" />
         <MiniStat label="ITERASI" value={iterations_run.toLocaleString()} />
-        <MiniStat label="RUNTIME" value={`${runtime_seconds?.toFixed(2) ?? '—'}s`} />
+        <MiniStat label="RUNTIME" value={formatRuntime()} />
         <MiniStat label="FINAL COST" value={total_cost} highlight={total_cost === 0} />
       </div>
     </div>

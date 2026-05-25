@@ -118,31 +118,41 @@ async def quick_execute(payload: SimpleExecuteRequest):
     if len(names) != len(set(names)):
         raise HTTPException(status_code=400, detail="employee_names harus unik")
 
-    # Determine shift_hours and shift_count_per_day from provided payload
+    # --- FEASIBILITY CHECK ---
+    # Cek apakah jumlah pegawai cukup untuk kebutuhan shift minimum
     provided_hours = payload.shift_hours
     provided_count = payload.shift_count_per_day
-
     if provided_hours is None and provided_count is None:
         raise HTTPException(status_code=400, detail="Harus menyediakan shift_hours atau shift_count_per_day")
 
     if provided_hours is not None and provided_count is not None:
-        # both provided -> must be consistent
         if 24 % provided_hours != 0 or (24 // provided_hours) != provided_count:
             raise HTTPException(status_code=400, detail="shift_hours dan shift_count_per_day tidak konsisten")
         shift_hours = provided_hours
         shift_count_per_day = provided_count
     elif provided_count is not None:
-        # compute hours
         if 24 % provided_count != 0:
             raise HTTPException(status_code=400, detail="shift_count_per_day harus membagi 24 secara habis")
         shift_count_per_day = provided_count
         shift_hours = 24 // shift_count_per_day
     else:
-        # only hours given
         if 24 % provided_hours != 0:
             raise HTTPException(status_code=400, detail="shift_hours harus membagi 24 secara habis")
         shift_hours = provided_hours
         shift_count_per_day = 24 // shift_hours
+
+    # Cek feasibility: jumlah pegawai minimal harus >= kebutuhan shift terbesar per hari
+    min_employees_needed = shift_count_per_day  # Asumsi 1 pegawai per shift minimal
+    if len(names) < min_employees_needed:
+        return {
+            "feasibility_check": {
+                "feasible": False,
+                "warning": f"Jumlah pegawai ({len(names)}) kurang dari jumlah shift per hari ({shift_count_per_day}). Jadwal tidak feasible. Tetap lanjut generate?",
+                "can_continue": True
+            }
+        }
+
+    # ...existing code...
 
     employees = [
         SimpleNamespace(id=index + 1, name=name, max_shifts_per_week=payload.working_days_per_week)
@@ -249,3 +259,4 @@ async def quick_execute(payload: SimpleExecuteRequest):
         },
         "table": table_rows,
     }
+

@@ -106,6 +106,10 @@ class SimpleExecuteRequest(BaseModel):
         description="Jumlah hari kerja dalam satu minggu",
     )
     start_date: date = Field(default_factory=date.today, description="Tanggal mulai jadwal")
+    force_generate: bool = Field(
+        False,
+        description="Jika True, tetap generate jadwal walaupun tidak feasible."
+    )
 
 
 @router.post("/execute")
@@ -143,7 +147,7 @@ async def quick_execute(payload: SimpleExecuteRequest):
 
     # Cek feasibility: jumlah pegawai minimal harus >= kebutuhan shift terbesar per hari
     min_employees_needed = shift_count_per_day  # Asumsi 1 pegawai per shift minimal
-    if len(names) < min_employees_needed:
+    if len(names) < min_employees_needed and not payload.force_generate:
         return {
             "feasibility_check": {
                 "feasible": False,

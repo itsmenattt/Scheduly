@@ -21,10 +21,8 @@ export default function SplashScreen({ onEnter }) {
       <div className="splash-bg-grid" />
 
       <div className="splash-center">
-        <div className="splash-tag">IF25-40404 — KECERDASAN KOMPUTASIONAL</div>
 
         <div className="splash-logo-wrap">
-          <span className="splash-badge">SA/CI</span>
           <h1 className="splash-title">SCHEDULY</h1>
         </div>
 
@@ -33,22 +31,7 @@ export default function SplashScreen({ onEnter }) {
 
         <div className="splash-divider" />
 
-        <div className="splash-info-row">
-          <div className="splash-info-item">
-            <span className="splash-info-label">METODE</span>
-            <span className="splash-info-value">Simulated Annealing</span>
-          </div>
-          <div className="splash-info-sep" />
-          <div className="splash-info-item">
-            <span className="splash-info-label">STACK</span>
-            <span className="splash-info-value">React + FastAPI</span>
-          </div>
-          <div className="splash-info-sep" />
-          <div className="splash-info-item">
-            <span className="splash-info-label">DATABASE</span>
-            <span className="splash-info-value">PostgreSQL</span>
-          </div>
-        </div>
+
 
         <button className="splash-enter" onClick={handleEnter}>
           <span className="splash-enter-arrow">➔</span> ENTER

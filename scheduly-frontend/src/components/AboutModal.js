@@ -29,7 +29,7 @@ export default function AboutModal({ onClose }) {
                 <span className="modal-step-num">01</span>
                 <div className="modal-step-content">
                   <span className="modal-step-title">Inisialisasi</span>
-                  <span className="modal-step-desc">Buat jadwal awal secara acak, set suhu T = 1000</span>
+                  <span className="modal-step-desc">Buat jadwal awal secara acak, set suhu T = 3000</span>
                 </div>
               </div>
               <div className="modal-step-arrow">↓</div>
@@ -53,7 +53,7 @@ export default function AboutModal({ onClose }) {
                 <span className="modal-step-num">04</span>
                 <div className="modal-step-content">
                   <span className="modal-step-title">Pendinginan</span>
-                  <span className="modal-step-desc">T = T × α (cooling rate 0.95), ulangi sampai T &lt; 0.1</span>
+                  <span className="modal-step-desc">T = T × α (cooling rate 0.95), ulangi sampai T &lt; 0.1 atau maks 15.000 iterasi</span>
                 </div>
               </div>
             </div>
@@ -65,17 +65,27 @@ export default function AboutModal({ onClose }) {
               <div className="modal-cost-item hard">
                 <span className="modal-cost-type">HARD</span>
                 <span className="modal-cost-desc">Pegawai dijadwal saat tidak tersedia</span>
-                <span className="modal-cost-val">×1000</span>
+                <span className="modal-cost-val">×3000</span>
               </div>
               <div className="modal-cost-item hard">
                 <span className="modal-cost-type">HARD</span>
-                <span className="modal-cost-desc">Shift kekurangan pegawai</span>
-                <span className="modal-cost-val">×500</span>
+                <span className="modal-cost-desc">Shift kekurangan pegawai / duplikat assignment</span>
+                <span className="modal-cost-val">×3000</span>
+              </div>
+              <div className="modal-cost-item hard">
+                <span className="modal-cost-type">HARD</span>
+                <span className="modal-cost-desc">Pegawai mendapat 2 shift di hari yang sama</span>
+                <span className="modal-cost-val">×3000</span>
               </div>
               <div className="modal-cost-item soft">
                 <span className="modal-cost-type">SOFT</span>
-                <span className="modal-cost-desc">Distribusi shift tidak merata</span>
-                <span className="modal-cost-val">×10</span>
+                <span className="modal-cost-desc">Melebihi batas shift per minggu (overwork)</span>
+                <span className="modal-cost-val">×200</span>
+              </div>
+              <div className="modal-cost-item soft">
+                <span className="modal-cost-type">SOFT</span>
+                <span className="modal-cost-desc">Pegawai tidak mendapat shift sama sekali</span>
+                <span className="modal-cost-val">×200</span>
               </div>
             </div>
           </div>

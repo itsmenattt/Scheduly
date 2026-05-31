@@ -29,8 +29,8 @@ export default function SAChart({ meta }) {
   // Generate data titik-titik simulasi (50 titik)
   const points = useMemo(() => {
     const N = 50;
-    const T0 = 1000;
-    const alpha = 0.95;
+    const T0 = 3000;   // sesuai backend: initial_temperature = 3000
+    const alpha = 0.95; // sesuai backend: cooling_rate = 0.95
     const pts = [];
 
     for (let i = 0; i <= N; i++) {
@@ -42,7 +42,7 @@ export default function SAChart({ meta }) {
       const noise = progress < 0.4
         ? (Math.random() - 0.3) * total_cost * 0.8 * (1 - progress * 2)
         : 0;
-      const baseCost = total_cost + (1500 - total_cost) * Math.exp(-progress * 5);
+      const baseCost = total_cost + (4500 - total_cost) * Math.exp(-progress * 5);
       const cost = Math.max(total_cost, baseCost + noise);
 
       pts.push({ progress, temp, cost, iter: Math.round(progress * iterations_run) });
@@ -57,9 +57,9 @@ export default function SAChart({ meta }) {
 
   // Scale helpers
   const xScale = (progress) => PAD.left + progress * innerW;
-  const tempScale = (t) => PAD.top + innerH - (t / 1000) * innerH;
+  const tempScale = (t) => PAD.top + innerH - (t / 3000) * innerH;  // Y-axis max = 3000
   const costScale = (c) => {
-    const maxC = 1500;
+    const maxC = 4500;
     return PAD.top + innerH - Math.min(c / maxC, 1) * innerH;
   };
 
@@ -202,8 +202,8 @@ export default function SAChart({ meta }) {
             ITERASI
           </text>
 
-          {/* Y-axis labels */}
-          {[0, 500, 1000].map((v, i) => (
+          {/* Y-axis labels — sesuai T_START = 3000 */}
+          {[0, 1500, 3000].map((v, i) => (
             <text
               key={i}
               x={PAD.left - 6}
@@ -253,8 +253,9 @@ export default function SAChart({ meta }) {
         borderTop: 'none',
         marginBottom: '0.5rem',
       }}>
-        <MiniStat label="T_START" value="1000" />
+        <MiniStat label="T_START" value="3000" />
         <MiniStat label="COOLING α" value="0.95" />
+        <MiniStat label="MAX ITER" value="15.000" />
         <MiniStat label="ITERASI" value={iterations_run.toLocaleString()} />
         <MiniStat label="RUNTIME" value={formatRuntime()} />
         <MiniStat label="FINAL COST" value={total_cost} highlight={total_cost === 0} />

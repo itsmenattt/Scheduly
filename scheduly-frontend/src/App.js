@@ -9,7 +9,6 @@ import SplashScreen from './components/SplashScreen';
 import AboutModal from './components/AboutModal';
 import SAChart from './components/SAChart';
 
-// Use REACT_APP_API_URL when provided; otherwise derive the backend host from the browser location.
 const DEFAULT_API_BASE =
   typeof window !== 'undefined'
     ? `${window.location.protocol}//${window.location.hostname}:8000/api/v1`
@@ -30,30 +29,21 @@ export default function App() {
   const [error, setError] = useState(null);
   const [info, setInfo] = useState(null);
   const [meta, setMeta] = useState(null);
-  const [theme, setTheme] = useState('light');
   const [showSplash, setShowSplash] = useState(true);
   const [showAbout, setShowAbout] = useState(false);
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
+  const [feasibilityWarning, setFeasibilityWarning] = useState(null); // { warning, employeeCount, shiftCount }
+  const [showChart, setShowChart] = useState(false);
 
   const makeRandomNames = useCallback((count) => {
     const prefixes = ['Agung', 'Bima', 'Citra', 'Dewi', 'Eka', 'Fajar', 'Gita', 'Hadi', 'Indah', 'Jaya', 'Kirana', 'Lestari'];
     const suffixes = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
     const names = [];
-
     while (names.length < count) {
       const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
       const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
       const candidate = `${prefix} ${suffix} ${Math.floor(Math.random() * 90 + 10)}`;
-      if (!names.includes(candidate)) {
-        names.push(candidate);
-      }
+      if (!names.includes(candidate)) names.push(candidate);
     }
-
     return names;
   }, []);
 
@@ -76,6 +66,7 @@ export default function App() {
     setInfo(null);
     setResult(null);
     setMeta(null);
+    setFeasibilityWarning(null);
 
     try {
       const seedRes = await fetch(`${API_BASE}/seed`, { method: 'POST' });
@@ -110,6 +101,19 @@ export default function App() {
       }
 
       const data = await executeRes.json();
+
+      // Handle feasibility check dari backend
+      if (data.feasibility_check && !data.table) {
+        setFeasibilityWarning({
+          warning: data.feasibility_check.warning,
+          employeeCount: count,
+          shiftCount: computedShiftCount,
+          generatedNames,
+        });
+        setLoading(false);
+        return;
+      }
+
       setResult(data.table);
       setMeta(data.schedule);
       setInfo(`Data random berhasil dibuat untuk ${count} orang dan jadwal otomatis ditampilkan.`);
@@ -119,6 +123,43 @@ export default function App() {
       setLoading(false);
     }
   }, [API_BASE, autoEmployeeCount, customShiftHours, makeRandomNames, shiftHours, shiftHoursMode, workingDays]);
+
+  const handleForceGenerate = useCallback(async () => {
+    if (!feasibilityWarning) return;
+    setFeasibilityWarning(null);
+    setLoading(true);
+    setError(null);
+    setInfo(null);
+    setResult(null);
+    setMeta(null);
+
+    try {
+      const names = employees.map(e => e.trim()).filter(Boolean);
+      const res = await fetch(`${API_BASE}/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          employee_names: names.length > 0 ? names : feasibilityWarning.generatedNames,
+          shift_hours: parseInt(shiftHours),
+          working_days_per_week: parseInt(workingDays),
+          start_date: startDate,
+          force_generate: true,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `Server error ${res.status}`);
+      }
+      const data = await res.json();
+      setResult(data.table);
+      setMeta(data.schedule);
+      setInfo('Jadwal dibuat dengan force generate — hasil mungkin tidak optimal.');
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [feasibilityWarning, employees, shiftHours, workingDays, startDate, API_BASE]);
 
   const handleGenerate = useCallback(async () => {
     const names = employees.map(e => e.trim()).filter(Boolean);
@@ -131,6 +172,7 @@ export default function App() {
     setInfo(null);
     setResult(null);
     setMeta(null);
+    setFeasibilityWarning(null);
 
     try {
       const res = await fetch(`${API_BASE}/execute`, {
@@ -148,6 +190,18 @@ export default function App() {
         throw new Error(err.detail || `Server error ${res.status}`);
       }
       const data = await res.json();
+
+      // Handle feasibility check dari backend
+      if (data.feasibility_check && !data.table) {
+        setFeasibilityWarning({
+          warning: data.feasibility_check.warning,
+          employeeCount: names.length,
+          shiftCount: 24 / parseInt(shiftHours),
+        });
+        setLoading(false);
+        return;
+      }
+
       setResult(data.table);
       setMeta(data.schedule);
       setInfo('Jadwal berhasil dibuat dari input manual.');
@@ -163,6 +217,56 @@ export default function App() {
       {showSplash && <SplashScreen onEnter={() => setShowSplash(false)} />}
       {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
 
+      {/* Feasibility Warning Popup */}
+      {feasibilityWarning && (
+        <div className="modal-overlay" onClick={() => setFeasibilityWarning(null)}>
+          <div className="modal-box" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <span className="modal-tag" style={{ borderColor: 'var(--red)', color: 'var(--red)', background: 'var(--red-bg)' }}>!</span>
+              <h2 className="modal-title">JADWAL TIDAK FEASIBLE</h2>
+              <button className="modal-close" onClick={() => setFeasibilityWarning(null)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div className="modal-section">
+                <div className="modal-section-label" style={{ color: 'var(--red)' }}>PERINGATAN</div>
+                <p className="modal-text">{feasibilityWarning.warning}</p>
+              </div>
+              <div className="modal-section">
+                <p className="modal-text" style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                  Untuk menghasilkan jadwal yang valid, jumlah karyawan harus minimal sama dengan
+                  jumlah shift per hari ({feasibilityWarning.shiftCount} shift/hari).
+                  Tambahkan lebih banyak karyawan atau kurangi jumlah shift.
+                </p>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: '0.5rem' }}>
+                <button
+                  className="btn-small"
+                  style={{ padding: '8px 24px', fontSize: 13 }}
+                  onClick={() => setFeasibilityWarning(null)}
+                >
+                  BATAL
+                </button>
+                <button
+                  className="btn-small"
+                  style={{
+                    padding: '8px 24px',
+                    fontSize: 13,
+                    background: 'var(--yellow)',
+                    color: '#0a0a0a',
+                    border: 'none',
+                    fontFamily: 'var(--font-mono)',
+                    cursor: 'pointer',
+                  }}
+                  onClick={handleForceGenerate}
+                >
+                  LANJUT GENERATE
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <header className="app-header">
         <div className="header-left">
           <span className="logo-tag">SA/CI</span>
@@ -173,10 +277,6 @@ export default function App() {
             <span className="header-sub">Generator Jadwal Shift Otomatis</span>
             <span className="header-method">Simulated Annealing</span>
           </div>
-          <button className="theme-toggle" onClick={toggleTheme}>
-            <span className="theme-toggle-icon">{theme === 'dark' ? '☀' : '☾'}</span>
-            {theme === 'dark' ? 'LIGHT' : 'DARK'}
-          </button>
           <button className="btn-about" onClick={() => setShowAbout(true)}>?</button>
         </div>
       </header>
@@ -310,7 +410,34 @@ export default function App() {
           {result && (
             <>
               {meta && <StatusBar meta={meta} employeeCount={employees.filter(Boolean).length} shiftHours={shiftHours} />}
-              {meta && <SAChart meta={meta} />}
+
+              {/* Toggle kurva SA — hidden by default */}
+              <div style={{ marginBottom: showChart ? '0' : '2rem' }}>
+                <button
+                  onClick={() => setShowChart(v => !v)}
+                  style={{
+                    background: showChart ? 'var(--yellow-bg)' : 'transparent',
+                    border: '1px solid',
+                    borderColor: showChart ? 'var(--yellow-border)' : 'var(--border)',
+                    color: showChart ? 'var(--yellow)' : 'var(--text-secondary)',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 11,
+                    padding: '6px 16px',
+                    cursor: 'pointer',
+                    letterSpacing: '0.08em',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <span style={{ fontSize: 11 }}>{showChart ? '▲' : '▼'}</span>
+                  {showChart ? 'SEMBUNYIKAN KURVA SA' : 'LIHAT KURVA SIMULATED ANNEALING'}
+                </button>
+              </div>
+
+              {showChart && meta && <SAChart meta={meta} />}
+
               <ResultTable data={result} />
             </>
           )}
